@@ -54,12 +54,16 @@ class easyExcel:
 		sht = self.xlBook.Worksheets
 		sht.Add().Name = sheetName
 
+
+
+'''
 if __name__ == '__main__':
-	xls = easyExcel(r'C:\Users\luohao\Desktop\事件工具\test_data.xlsx')
+	xls = easyExcel(r'C:\\Users\\luohao\\Desktop\\事件工具\\test_data.xlsx')
 	print(xls.getCell('sheet1', 1,1))
 	xls.insertRow('sheet1', 7)
 	xls.save()
 	xls.close()
+'''
 
 
 """
