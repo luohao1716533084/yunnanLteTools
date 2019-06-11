@@ -146,20 +146,29 @@ def get_threshold_value(meid, measCfgIdx, subUeEUtran):
 	event_value = int(series['eventId'])
 	dict_list = eventId_dict[event_value]
 	if event_value == 2:
-		tmp_value = int(series[dict_list[0]]) + int(series[dict_list[1]])
+		tmp_value = float(series[dict_list[0]]) + float(series[dict_list[1]])
 		threshold_value.append(str(tmp_value))
 	elif event_value == 4:
 		tmp_value1 = series[dict_list[0]]
+		threshold_value.append(str(tmp_value1))
 		tmp_value2 = series[dict_list[1]]
-		threshold_value.append(str(tmp_value1)).append(str(tmp_value2))
+		threshold_value.append(str(tmp_value2))
 	else:
 		tmp_value = series[dict_list[0]]
 		threshold_value.append(tmp_value)
 	#返回的threshold_value是一个列表,元素是门限值；
 	return threshold_value
 
+test_MEID = [32791, 32791, 32791, 32791]
+test_measCfgIdx = [10, 700, 954, 961]
 
+lst = []
+for i in range(4):
+	lst.append(str(test_MEID[i]) + str("-") +str(test_measCfgIdx[i]))
 
+lst1 = pretreatment_excel4(excel_path4)
+
+print(get_threshold_value(32791, 100, lst1))
 
 result3_columns = {'MEID': [''],
 	'description':[''],
