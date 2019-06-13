@@ -1,10 +1,8 @@
 #coding:utf-8
 
 import pandas as pd
-from pandas import Series, DataFrame
+from pandas import DataFrame
 import re
-from test_excel import *
-from win32com.client import Dispatch
 import numpy as np
 import os
 
@@ -22,7 +20,7 @@ eventId_dict = {
 	2: ['hysteresis', 'a3Offset'],
 	3: ['thresholdOfRSRP'],
 	4: ['thresholdOfRSRP', 'a5Threshold2OfRSRP'],
-	5: ['A6']}
+	5: ['thresholdOfRSRP']}
 
 def cheak_excel(cheak_result=False):
 	current_path = os.getcwd()
@@ -94,28 +92,32 @@ excel_path2 = r'C:\Users\luohao\Desktop\事件工具\EUtranCellMeasurementTDD_20
 excel_path3 = r'C:\\Users\\luohao\\Desktop\\事件工具\\CellMeasGroupTDD_20190530.xlsx'
 excel_path4 = r'C:\\Users\\luohao\\Desktop\\事件工具\\UeEUtranMeasurementTDD_20190530_180751339.xlsx'
 
+excel1_cols = ['MEID', 'description', 'userLabel', 'bandIndicator', 'earfcn']
+excel2_cols = ['MEID', 'description', 'refCellMeasGroupTDD', 'eutranMeasParas']
+excel3_cols = ['MEID', 'description', 'closedInterFMeasCfg', 'openInterFMeasCfg', 'openRedMeasCfg', 'intraFHOMeasCfg', 'interFHOMeasCfg']
+excel4_cols = ['MEID', 'measCfgIdx', 'eventId', 'thresholdOfRSRP', 'a5Threshold2OfRSRP', 'hysteresis', 'a3Offset']
+
 def pretreatment_excel1(excel_path):
 	df1 = pd.read_excel(excel_path, sheet_name='EUtranCellTDD')
-	frame1 = df1.ix[[3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [4, 6, 7, 24, 25]]
+	frame1 = df1.ix[[3, 4, 5, 6, 7, 8, 9, 10, 11, 12], excel1_cols]
 	frame1.loc[:,'description'] = list(map(description_proc, list(frame1.description)))
 	excel1_result = concat_columns(frame1, 'MEID', 'description', 'CI')
 	return excel1_result
 
 def pretreatment_excel2(excel_path):
 	df2 = pd.read_excel(excel_path,sheet_name='EUtranCellMeasurementTDD')
-	frame2 = df2.ix[[3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [4, 6, 7, 35]]
+	frame2 = df2.ix[[3, 4, 5, 6, 7, 8, 9, 10, 11, 12], excel2_cols]
 	frame2['eutranMeasParas'] = list(map(eutranMeasParas_proc, list(frame2.eutranMeasParas)))
 	frame2['description'] = list(map(description_proc, list(frame2.description)))
 	frame2['refCellMeasGroupTDD'] = list(map(refCellMeasGroupTDD_proc, list(frame2.refCellMeasGroupTDD)))
-	excel2_result = concat_columns(frame2, 'MEID', 'description', 'CI')
-
-	return excel2_result.ix[:, ['CI', 'refCellMeasGroupTDD', 'eutranMeasParas']]
+	excel2_result = concat_columns(frame2, 'MEID', 'refCellMeasGroupTDD', 'refId')
+	excel2_result = concat_columns(excel2_result, 'MEID', 'description', 'CI')
+	return excel2_result.ix[:, ['CI', 'refId', 'refCellMeasGroupTDD', 'eutranMeasParas']]
 
 def pretreatment_excel3(excel_path):
 	df3 = pd.read_excel(excel_path, sheet_name='CellMeasGroupTDD')
-	frame3 = df3.ix[[x for x in range(3, 19)], [4, 6, 9, 10, 12, 13, 14]]
+	frame3 = df3.ix[[x for x in range(3, 19)], excel3_cols]
 	frame3['description'] = list(map(description_proc, list(frame3.description)))
-
 	#closedInterFMeasCfg字段，取第一元素，为A1
 	frame3['closedInterFMeasCfg'] = list(map(get_firstOne_proc, list(frame3.closedInterFMeasCfg)))
 	#openInterFMeasCfg字段，取第一元素，为A2
@@ -126,13 +128,14 @@ def pretreatment_excel3(excel_path):
 	frame3['intraFHOMeasCfg'] = list(map(get_firstOne_proc, list(frame3.intraFHOMeasCfg)))
 	frame3['interFHOMeasCfg'] = list(map(get_split_proc, list(frame3.interFHOMeasCfg)))
 
-	excel3_result = concat_columns(frame3, 'MEID', 'description', 'CI')
+	excel3_result = concat_columns(frame3, 'MEID', 'description', 'refId')
 
-	return excel3_result.ix[:, ['CI','closedInterFMeasCfg', 'openInterFMeasCfg', 'openRedMeasCfg', 'intraFHOMeasCfg', 'interFHOMeasCfg']]
+	return excel3_result.ix[:, ['refId','closedInterFMeasCfg', 'openInterFMeasCfg', 'openRedMeasCfg', 'intraFHOMeasCfg', 'interFHOMeasCfg']]
 
 def pretreatment_excel4(excel_path):
 	df4 = pd.read_excel(excel_path, sheet_name='UeEUtranMeasurementTDD')
-	frame4 = df4.ix[[x for x in range(3, 110)], [4, 7, 12, 13, 15, 17, 25]]
+	#[x for x in range(3, 110)]
+	frame4 = df4.ix[3:, excel4_cols]
 	excel4_result = concat_columns(frame4, 'MEID', 'measCfgIdx', 'MEID-measCfgIdx')
 	excel4_result = excel4_result.set_index('MEID-measCfgIdx')
 	return excel4_result
@@ -148,6 +151,7 @@ def get_threshold_value(meid, measCfgIdx, subUeEUtran):
 	if event_value == 2:
 		tmp_value = float(series[dict_list[0]]) + float(series[dict_list[1]])
 		threshold_value.append(str(tmp_value))
+		threshold_value.append(str(' '))
 	elif event_value == 4:
 		tmp_value1 = series[dict_list[0]]
 		threshold_value.append(str(tmp_value1))
@@ -156,33 +160,70 @@ def get_threshold_value(meid, measCfgIdx, subUeEUtran):
 	else:
 		tmp_value = series[dict_list[0]]
 		threshold_value.append(tmp_value)
+		threshold_value.append(str(' '))
 	#返回的threshold_value是一个列表,元素是门限值；
 	return threshold_value
 
-test_MEID = [32791, 32791, 32791, 32791]
-test_measCfgIdx = [10, 700, 954, 961]
-
-lst = []
-for i in range(4):
-	lst.append(str(test_MEID[i]) + str("-") +str(test_measCfgIdx[i]))
-
-lst1 = pretreatment_excel4(excel_path4)
-
-print(get_threshold_value(32791, 100, lst1))
-
-result3_columns = {'MEID': [''],
+final_columns = {'MEID': [''],
 	'description':[''],
 	'userLabel': [''],
 	'bandIndicator': [''],
 	'earfcn': [''],
 	'CI': [''],
+	'refId': [''],
 	'refCellMeasGroupTDD': [''],
 	'eutranMeasParas': [''],
 	'closedInterFMeasCfg': [''],
 	'openInterFMeasCfg': [''],
 	'openRedMeasCfg': [''],
 	'intraFHOMeasCfg': [''],
-	'interFHOMeasCfg': ['']}
+	'interFHOMeasCfg': [''],
+	'A5门限1': [''],
+	'A5门限2': ['']}
+
+row1_cols = ['MEID',
+			 'description',
+			 'userLabel',
+			 'bandIndicator',
+			 'earfcn',
+			 'CI',
+			 'refId',
+			 'refCellMeasGroupTDD']
+
+row2_cols = ['closedInterFMeasCfg',
+			 'openInterFMeasCfg',
+			 'openRedMeasCfg',
+			 'intraFHOMeasCfg']
+
+def insert_threshold(df1, df2):          #df1为3个原始表关联的表，df2为UeEUtran表
+	meid_set1 = set(df1['MEID'])
+	meid_set2 = set(df2['MEID'])
+	meid_set = meid_set1.intersection(meid_set2)
+
+	final_result = DataFrame(final_columns,index=[0])
+	for meid in meid_set:
+		sub_df1 = df1[df1['MEID'] == meid]
+		sub_df2 = df2[df2['MEID'] == meid]
+		insertRow = []
+		for i in range(len(sub_df1)):
+			row = sub_df1.iloc[i]   #row 的类型为series
+			fre_lst = row['eutranMeasParas']   #fre_lst为异频频点列表,本身就是list类型，无需进行转化
+			row1 = row[row1_cols]     #row1的类型为series
+			row2 = row[row2_cols]     #row2的类型为series
+			cfg_lst = row['interFHOMeasCfg']
+
+			for value in list(row1):         #向insertRow列表插入row1八个元素
+				insertRow.append(value)
+
+			for value in list(row2):          #向insertRow列表插入4个元素
+				threshold_value = get_threshold_value(meid, value, sub_df2)   #将测量配置号换成门限值
+				insertRow.append(threshold_value)
+
+			for n in range(len(fre_lst)):
+				insertRow.insert(8, get_threshold_value(meid, fre_lst[n], sub_df2))
+				insertRow.append(get_threshold_value(meid, cfg_lst[n], sub_df2))
+				final_result.append(insertRow)
+	return final_result
 
 def main():
 	cheak_results = cheak_excel()
@@ -190,20 +231,13 @@ def main():
 		df1 = pretreatment_excel1(excel_path1)
 		df2 = pretreatment_excel2(excel_path2)
 		df3 = pretreatment_excel3(excel_path3)
+		df4 = pretreatment_excel4(excel_path4)
 		result1 = pd.merge(df1, df2, on=['CI'])
-		result2 = pd.merge(result1, df3, on=['CI'])
-		#result2.to_excel('sample.xlsx', index=False)
-
-		result4 = DataFrame(result3_columns,index=[0])
-
-		for i in range(len(result2)):
-			for j in range(len(result2.ix[i]['eutranMeasParas'])):
-				pass
+		result2 = pd.merge(result1, df3, on=['refId'])
+		result = insert_threshold(result2, df4)
+		result.to_excel('sample1.xlsx', index=False)
 	else:
 		print("%s 文件缺失" % (cheak_results[1]))
 
-'''
 if __name__ == '__main__':
 	main()
-'''
-#test

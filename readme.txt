@@ -6,11 +6,14 @@ MEID	description	userLabel CI
 1.根据自身获取如下字段：
 EnodeB	对象描述	测量配置索引组   eutranMeasParas"
 
+
 3）打开CellMeasGroupTDD表：
 1.根据上张表的eutranMeasParas频点个数s（即[的元素个数为频点个数]），只获取s个元素。在interFHOMeasCfg字段中；
 2.获取如下字段：
 openRedMeasCfg	intraFHOMeasCfg	interFHOMeasCfg
 MEID  description closedInterFMeasCfg openInterFMeasCfg  
+
+用EUtranCellMeasurementTDD表中的[测量配置索引组]匹配CellMeasGroupTDD表中的[MEID]+[description]
 
 3）打开UeEUtranMeasurementTDD
 根据测量配置号，获取事件标识，再根据事件标识的数值获取采用什么事件，同时得出门限值；
