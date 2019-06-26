@@ -3,7 +3,6 @@
 import pandas as pd
 from pandas import DataFrame
 import re
-import numpy as np
 import os
 import copy
 
@@ -87,11 +86,6 @@ def concat_columns(df, columns1, columns2, new_column):
 			new_column_data.append(tmp)
 		df[new_column] = new_column_data
 	return df
-
-excel_path1 = r'C:\Users\luohao\Desktop\事件工具\EUtranCellTDD_20190530.xlsx'
-excel_path2 = r'C:\Users\luohao\Desktop\事件工具\EUtranCellMeasurementTDD_20190530.xlsx'
-excel_path3 = r'C:\\Users\\luohao\\Desktop\\事件工具\\CellMeasGroupTDD_20190530.xlsx'
-excel_path4 = r'C:\\Users\\luohao\\Desktop\\事件工具\\UeEUtranMeasurementTDD_20190530_180751339.xlsx'
 
 excel1_cols = ['MEID', 'description', 'userLabel', 'bandIndicator', 'earfcn']
 excel2_cols = ['MEID', 'description', 'refCellMeasGroupTDD', 'eutranMeasParas']
