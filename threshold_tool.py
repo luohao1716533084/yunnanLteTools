@@ -6,11 +6,18 @@ import re
 import os
 import copy
 
-excel_relation = {
+excel_relation_TDD = {
 	'excel1': 'EUtranCellTDD',
 	'excel2': 'EUtranCellMeasurementTDD',
 	'excel3': 'CellMeasGroupTDD',
 	'excel4': 'UeEUtranMeasurementTDD',
+}
+
+excel_relation_FDD = {
+	'excel1': 'EUtranCellFDD',
+	'excel2': 'EUtranCellMeasurement',
+	'excel3': 'CellMeasGroup',
+	'excel4': 'UeEUtranMeasurement',
 }
 
 EventId = {0:'A1', 1:'A2', 2: 'A3', 3:'A4', 4:'A5', 5:'A6'}
@@ -22,6 +29,13 @@ eventId_dict = {
 	4: ['thresholdOfRSRP', 'a5Threshold2OfRSRP'],
 	5: ['thresholdOfRSRP']}
 
+excel1_cols_TDD = ['MEID', 'description', 'userLabel', 'bandIndicator', 'earfcn']
+excel1_cols_FDD = ['MEID', 'description', 'userLabel', 'freqBandInd', 'earfcnDl']
+excel2_cols_TDD = ['MEID', 'description', 'refCellMeasGroupTDD', 'eutranMeasParas']
+excel2_cols_FDD = ['MEID', 'description', 'refCellMeasGroup', 'eutranMeasParas']
+excel3_cols = ['MEID', 'description', 'closedInterFMeasCfg', 'openInterFMeasCfg', 'openRedMeasCfg', 'intraFHOMeasCfg', 'interFHOMeasCfg']
+excel4_cols = ['MEID', 'measCfgIdx', 'eventId', 'thresholdOfRSRP', 'a5Threshold2OfRSRP', 'hysteresis', 'a3Offset']
+
 def cheak_excel(cheak_result=False):
 	current_path = os.getcwd()
 	file_path_list = []
@@ -31,29 +45,40 @@ def cheak_excel(cheak_result=False):
 
 	#将匹配到的excel按excel_relation顺序添加进新建列表
 	new_excel_filepath_list = []
-	for value in excel_relation.values():
+	for value in excel_relation_TDD.values():
 		for f in range(len(file_path_list)):
 			if value in file_path_list[f]:
 				new_excel_filepath_list.append(file_path_list[f])
 
-
 	#核查文件是否有缺失，如果有缺失，则返回缺失的文件列表
 	if len(new_excel_filepath_list) == 4:
 		cheak_result = True
-		return cheak_result,new_excel_filepath_list
+		LTE = 'TDD'
+		return cheak_result,new_excel_filepath_list, LTE
+	elif len(new_excel_filepath_list) == 0:
+		for value in excel_relation_FDD.values():
+			for f in range(len(file_path_list)):
+				if value in file_path_list[f]:
+					new_excel_filepath_list.append(file_path_list[f])
+
+		if len(new_excel_filepath_list) == 4:
+			cheak_result = True
+			LTE = 'FDD'
+			return cheak_result,new_excel_filepath_list, LTE
 	else:
-		missing_file = list(set(excel_relation.values()).difference(new_excel_filepath_list))
-		return cheak_result, missing_file
+		return cheak_result
 
 def description_proc(cellLocalId):                   #获取对象描述
 	pattern = re.compile(r'\d+')
 	new_cellLocalId = pattern.findall(cellLocalId)
 	return new_cellLocalId[0]
 
-def refCellMeasGroupTDD_proc(refCellMeasGroupTDD):        #获取测量配置索引组ID
-	tmp = refCellMeasGroupTDD.split("CellMeasGroupTDD=")
-	if len(tmp) != 0:
-		return tmp[1]
+
+def refCellMeasGroup_proc(refCellMeasGroupTDD):        #获取测量配置索引组ID
+	pattern = re.compile(r'CellMeasGroup\w{0,3}\=\d+')
+	new_CellMeasGroup = pattern.findall(refCellMeasGroupTDD)      #new_CellMeasGroup返回的是一个列表
+	result = description_proc(new_CellMeasGroup[0])               #这里调用函数提取数字
+	return result
 
 def eutranMeasParas_proc(eutranMeasParas):               #获取（异频测量频点）
 	interCarriFreq_list = []
@@ -87,30 +112,49 @@ def concat_columns(df, columns1, columns2, new_column):
 		df[new_column] = new_column_data
 	return df
 
-excel1_cols = ['MEID', 'description', 'userLabel', 'bandIndicator', 'earfcn']
-excel2_cols = ['MEID', 'description', 'refCellMeasGroupTDD', 'eutranMeasParas']
-excel3_cols = ['MEID', 'description', 'closedInterFMeasCfg', 'openInterFMeasCfg', 'openRedMeasCfg', 'intraFHOMeasCfg', 'interFHOMeasCfg']
-excel4_cols = ['MEID', 'measCfgIdx', 'eventId', 'thresholdOfRSRP', 'a5Threshold2OfRSRP', 'hysteresis', 'a3Offset']
+def pretreatment_excel1(excel_path, lte, excel_name):
+	cols = ''
+	df1 = pd.read_excel(excel_path, sheet_name=excel_name)
+	if lte == 'TDD':
+		cols = excel1_cols_TDD
+		frame1 = df1.ix[3:,cols]
+		frame1.loc[:,'description'] = list(map(description_proc, list(frame1.description)))
+		excel1_result = concat_columns(frame1, 'MEID', 'description', 'CI')
+		return excel1_result
+	if lte == 'FDD':
+		cols = excel1_cols_FDD
+		frame1 = df1.ix[3:,cols]
+		frame1.loc[:,'description'] = list(map(description_proc, list(frame1.description)))
+		excel1_result = concat_columns(frame1, 'MEID', 'description', 'CI')
+		excel1_result.rename(columns={'earfcnDl': 'earfcn'}, inplace=True)
+		excel1_result.rename(columns={'freqBandInd':'bandIndicator'}, inplace=True)
+		return excel1_result
 
-def pretreatment_excel1(excel_path):
-	df1 = pd.read_excel(excel_path, sheet_name='EUtranCellTDD')
-	frame1 = df1.ix[3:, excel1_cols]
-	frame1.loc[:,'description'] = list(map(description_proc, list(frame1.description)))
-	excel1_result = concat_columns(frame1, 'MEID', 'description', 'CI')
-	return excel1_result
+def pretreatment_excel2(excel_path, lte, excel_name):
+	cols = ''
+	df2 = pd.read_excel(excel_path,sheet_name=excel_name)
+	if lte == 'TDD':
+		cols = excel2_cols_TDD
+		frame2 = df2.ix[3:, cols]
+		frame2['eutranMeasParas'] = list(map(eutranMeasParas_proc, list(frame2.eutranMeasParas)))
+		frame2['description'] = list(map(description_proc, list(frame2.description)))
+		frame2['refCellMeasGroupTDD'] = list(map(refCellMeasGroup_proc, list(frame2.refCellMeasGroupTDD)))
+		excel2_result = concat_columns(frame2, 'MEID', 'refCellMeasGroupTDD', 'refId')
+		excel2_result = concat_columns(excel2_result, 'MEID', 'description', 'CI')
+		excel2_result.rename(columns={'refCellMeasGroupTDD':'refCellMeasGroup'}, inplace=True)
+		return excel2_result.ix[:, ['CI', 'refId', 'refCellMeasGroup', 'eutranMeasParas']]
+	if lte == 'FDD':
+		cols = excel2_cols_FDD
+		frame2 = df2.ix[3:, cols]
+		frame2['eutranMeasParas'] = list(map(eutranMeasParas_proc, list(frame2.eutranMeasParas)))
+		frame2['description'] = list(map(description_proc, list(frame2.description)))
+		frame2['refCellMeasGroup'] = list(map(refCellMeasGroup_proc, list(frame2.refCellMeasGroup)))
+		excel2_result = concat_columns(frame2, 'MEID', 'refCellMeasGroup', 'refId')
+		excel2_result = concat_columns(excel2_result, 'MEID', 'description', 'CI')
+		return excel2_result.ix[:, ['CI', 'refId', 'refCellMeasGroup', 'eutranMeasParas']]
 
-def pretreatment_excel2(excel_path):
-	df2 = pd.read_excel(excel_path,sheet_name='EUtranCellMeasurementTDD')
-	frame2 = df2.ix[3:, excel2_cols]
-	frame2['eutranMeasParas'] = list(map(eutranMeasParas_proc, list(frame2.eutranMeasParas)))
-	frame2['description'] = list(map(description_proc, list(frame2.description)))
-	frame2['refCellMeasGroupTDD'] = list(map(refCellMeasGroupTDD_proc, list(frame2.refCellMeasGroupTDD)))
-	excel2_result = concat_columns(frame2, 'MEID', 'refCellMeasGroupTDD', 'refId')
-	excel2_result = concat_columns(excel2_result, 'MEID', 'description', 'CI')
-	return excel2_result.ix[:, ['CI', 'refId', 'refCellMeasGroupTDD', 'eutranMeasParas']]
-
-def pretreatment_excel3(excel_path):
-	df3 = pd.read_excel(excel_path, sheet_name='CellMeasGroupTDD')
+def pretreatment_excel3(excel_path, excel_name):
+	df3 = pd.read_excel(excel_path, sheet_name=excel_name)
 	frame3 = df3.ix[3:, excel3_cols]
 	frame3['description'] = list(map(description_proc, list(frame3.description)))
 	#closedInterFMeasCfg字段，取第一元素，为A1
@@ -127,8 +171,8 @@ def pretreatment_excel3(excel_path):
 
 	return excel3_result.ix[:, ['refId','closedInterFMeasCfg', 'openInterFMeasCfg', 'openRedMeasCfg', 'intraFHOMeasCfg', 'interFHOMeasCfg']]
 
-def pretreatment_excel4(excel_path):
-	df4 = pd.read_excel(excel_path, sheet_name='UeEUtranMeasurementTDD')
+def pretreatment_excel4(excel_path, excel_name):
+	df4 = pd.read_excel(excel_path, sheet_name=excel_name)
 	#[x for x in range(3, 110)]
 	frame4 = df4.ix[3:, excel4_cols]
 	excel4_result = concat_columns(frame4, 'MEID', 'measCfgIdx', 'MEID-measCfgIdx')
@@ -186,7 +230,7 @@ final_columns = {'MEID': [''],
 	'earfcn': [''],
 	'CI': [''],
 	'refId': [''],
-	'refCellMeasGroupTDD': [''],
+	'refCellMeasGroup': [''],
 	'eutranMeasParas': [''],
 	'A1门限': [''],
 	'A2门限': [''],
@@ -204,7 +248,7 @@ row1_cols = ['MEID',
 			 'earfcn',
 			 'CI',
 			 'refId',
-			 'refCellMeasGroupTDD']
+			 'refCellMeasGroup']
 
 row2_cols = ['closedInterFMeasCfg',
 			 'openInterFMeasCfg',
@@ -249,17 +293,26 @@ def insert_threshold(df1, df2):          #df1为3个原始表关联的表，df2�
 def main():
 	cheak_results = cheak_excel()
 	if	cheak_results[0] == True:
-		excel_path_list = cheak_excel()[1]
-		df1 = pretreatment_excel1(excel_path_list[0])
-		df2 = pretreatment_excel2(excel_path_list[1])
-		df3 = pretreatment_excel3(excel_path_list[2])
-		df4 = pretreatment_excel4(excel_path_list[3])
+		excel_path_list = cheak_results[1]
+		lte = cheak_results[2]
+		excel_dict = {}
+		if lte == 'TDD':
+			excel_dict = excel_relation_TDD
+		if lte == 'FDD':
+			excel_dict = excel_relation_FDD
+		df1 = pretreatment_excel1(excel_path_list[0], lte, excel_dict['excel1'])
+		df2 = pretreatment_excel2(excel_path_list[1], lte, excel_dict['excel2'])
+		df3 = pretreatment_excel3(excel_path_list[2], excel_dict['excel3'])
+		df4 = pretreatment_excel4(excel_path_list[3], excel_dict['excel4'])
 		result1 = pd.merge(df1, df2, on=['CI'])
 		result2 = pd.merge(result1, df3, on=['refId'])
 		result = insert_threshold(result2, df4)
-		result.to_excel('sample5.xlsx', index=False)
+		result.to_excel('result.xlsx', index=False)
 	else:
-		print("%s 文件缺失" % (cheak_results[1]))
+		print("%s 文件缺失, 请核查文件是否存在")
 
 if __name__ == '__main__':
+	print("Welcome to use threshold tool.The version2.0. ")
+	print("程序静默执行，请耐心等待...")
 	main()
+	print(input("result.xlsx文件已生成，输入任意键按回车退出："))
