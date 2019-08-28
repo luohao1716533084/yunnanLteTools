@@ -74,6 +74,13 @@ def description_proc(cellLocalId):                   #获取对象描述
 	return new_cellLocalId[0]
 
 
+def delete_nan_proc(df):
+	index_num = df.index.values
+	for num in index_num:
+		if str(df.ix[[num],['eutranMeasParas']].values[0][0]) == 'nan':
+			df.drop([num],inplace=True)
+	return df
+
 def refCellMeasGroup_proc(refCellMeasGroupTDD):        #获取测量配置索引组ID
 	pattern = re.compile(r'CellMeasGroup\w{0,3}\=\d+')
 	new_CellMeasGroup = pattern.findall(refCellMeasGroupTDD)      #new_CellMeasGroup返回的是一个列表
@@ -135,7 +142,8 @@ def pretreatment_excel2(excel_path, lte, excel_name):
 	df2 = pd.read_excel(excel_path,sheet_name=excel_name)
 	if lte == 'TDD':
 		cols = excel2_cols_TDD
-		frame2 = df2.ix[3:, cols]
+		frame = df2.ix[3:, cols]
+		frame2 = delete_nan_proc(frame)
 		frame2['eutranMeasParas'] = list(map(eutranMeasParas_proc, list(frame2.eutranMeasParas)))
 		frame2['description'] = list(map(description_proc, list(frame2.description)))
 		frame2['refCellMeasGroupTDD'] = list(map(refCellMeasGroup_proc, list(frame2.refCellMeasGroupTDD)))
@@ -145,7 +153,8 @@ def pretreatment_excel2(excel_path, lte, excel_name):
 		return excel2_result.ix[:, ['CI', 'refId', 'refCellMeasGroup', 'eutranMeasParas']]
 	if lte == 'FDD':
 		cols = excel2_cols_FDD
-		frame2 = df2.ix[3:, cols]
+		frame = df2.ix[3:, cols]
+		frame2 = delete_nan_proc(frame)
 		frame2['eutranMeasParas'] = list(map(eutranMeasParas_proc, list(frame2.eutranMeasParas)))
 		frame2['description'] = list(map(description_proc, list(frame2.description)))
 		frame2['refCellMeasGroup'] = list(map(refCellMeasGroup_proc, list(frame2.refCellMeasGroup)))
@@ -234,7 +243,7 @@ final_columns = {'MEID': [''],
 	'eutranMeasParas': [''],
 	'A1门限': [''],
 	'A2门限': [''],
-	'A2忙重定向': [''],
+	'A2盲重定向': [''],
 	'同频A3': [''],
 	'异频A3': [''],
 	'A4门限': [''],
