@@ -74,6 +74,8 @@ frame.ix[[行号],[列名列表]]
 frame.ix[:, [列名列表]]
 8，将A列作为索引
 frame.set_index(列名A)
+9.series 取值：
+frame.values
 
 concat
 merge
