@@ -241,6 +241,7 @@ final_columns = {'MEID': [''],
 	'refId': [''],
 	'refCellMeasGroup': [''],
 	'eutranMeasParas': [''],
+	'频点序列索引': [''],
 	'A1门限': [''],
 	'A2门限': [''],
 	'A2盲重定向': [''],
@@ -291,6 +292,7 @@ def insert_threshold(df1, df2):          #df1为3个原始表关联的表，df2�
 			for n in range(len(fre_lst)):
 				insertRow_cp = copy.deepcopy(insertRow)
 				insertRow_cp.insert(8, fre_lst[n])
+				insertRow_cp.insert(9, n+1)
 				tmplist = get_threshold_value1(meid, cfg_lst[n], sub_df2)
 				new_result = insertRow_cp + tmplist
 				final_result.loc[count] = new_result
@@ -321,7 +323,9 @@ def main():
 		print("%s 文件缺失, 请核查文件是否存在")
 
 if __name__ == '__main__':
-	print("Welcome to use threshold tool.The version2.0. ")
+	print("Welcome to use threshold tool.The version2.1. Author by luohao")
+	print('欢迎使用中兴LTE切换事件工具')
+	print('***TDD和FDD制式均可使用该工具')
 	print("程序静默执行，请耐心等待...")
 	main()
 	print(input("result.xlsx文件已生成，输入任意键按回车退出："))
