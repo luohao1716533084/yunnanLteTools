@@ -2,21 +2,38 @@
 
 import pandas as pd
 
-col_name = ['区县', 'eNodeBName', 'CellName', '站点类型', 'EARFCN', 'Azimuth']
+colName = ['区县', 'eNodeBName', 'CellName', '站点类型', 'EARFCN', 'Azimuth']
+excelPath = r'C:\\Users\\luohao\\Desktop\\事件工具\\昆明华为LTE工参-20191021.xlsx'
+sheetName = '华为'
+AREA, CATE = '盘龙', '宏站'
 
-class pandasExcel:
-	def __init__(self, excelpath, field, sheet_name):
-		self.path = excelpath
-		self.field = field
+
+class OpenExcel:
+	def __init__(self, excel_path, sheet_name, col_name):
+		self.path = excel_path
+		self.col_name = col_name
 		self.df = pd.read_excel(self.path, sheet_name)
 
 	def pre_process(self, area, cate):
-		self.frame = self.df.ix[:, ['区县', 'eNodeBName', 'CellName', '站点类型', 'EARFCN', 'Azimuth']]
+		self.frame = self.df.ix[:, self.col_name]
 		self.frame_data = self.frame[(self.frame['区县'] == area) & (self.frame['站点类型'] == cate)]
 		self.frame_data_reindex = self.frame_data.reset_index()
 		return self.frame_data_reindex
 
-excel = pandasExcel(r'C:\\Users\\luohao\\Desktop\\事件工具\\昆明华为LTE工参-20191021.xlsx', col_name, '华为')
-print(excel.pre_process('盘龙', '宏站'))
+
+class DfOperate:
+	def __init__(self, df):
+		self.df = df
+
+	def get_cellname(self, colName):                  #获取需要的字段的去重值
+		self.colName_list = list(set(self.df[colName]))
+		return self.colName_list
+
+
+excel = OpenExcel(excelPath, sheetName, colName)
+
+print(excel.pre_process(AREA, CATE))
+# def main():
+# 	df = excel.pre_process('盘龙', '宏站')
 
 
