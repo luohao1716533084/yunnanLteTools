@@ -8,7 +8,7 @@ EnodeB	对象描述	测量配置索引组   eutranMeasParas"
 
 
 3）打开CellMeasGroupTDD表：
-1.根据上张表的eutranMeasParas频点个数s（即[的元素个数为频点个数]），只获取s个元素。在interFHOMeasCfg字段中；
+1.根据上张EUtranCellMeasurementTDD表的eutranMeasParas频点个数s（即[的元素个数为频点个数]），只获取s个元素。在interFHOMeasCfg字段中；
 2.获取如下字段：
 openRedMeasCfg	intraFHOMeasCfg	interFHOMeasCfg
 MEID  description closedInterFMeasCfg openInterFMeasCfg  
@@ -55,7 +55,7 @@ DataFrame
 1，重新设置索引
 new_index = ['one', 'two', 'three', 'four', 'five']
 frame = DataFrame(data,index=new_index)
-2, 读取索引的行号, 结果集为列表,首行是字段名，无索引号；
+2, 读取索引, 结果集为列表,首行是字段名，无索引号；
 index_num = df.index.values
 3，获取字段名；
 field_0 = frame.columns[0]
@@ -76,10 +76,20 @@ frame.ix[:, [列名列表]]
 frame.set_index(列名A)
 9.series 取值：
 frame.values
+10.reset_index() 索引重置
+不添加参数，即默认从0重置索引；
+11.筛选
+df[df['字段名'] == '筛选值']
+12.多个字段筛选
+df[(df['字段名1'] == '筛选值1') & (df['字段名2'] == '筛选值2')]
 
 concat
 merge
 join
+
+10.pandas DataFrame 交集并集补集
+https://www.cnblogs.com/niuniuc/p/9873134.html
+
 ========================================
 多线程
 multiprocessing
