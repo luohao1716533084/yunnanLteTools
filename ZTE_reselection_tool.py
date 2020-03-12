@@ -4,6 +4,14 @@ import pandas as pd
 import re
 import copy
 
+
+"""
+2020/3/12
+push github
+
+"""
+
+
 eutranTDD_cols = ['MEID', 'description', 'userLabel', 'earfcn']
 eutranTDD_Reselection_cols = ['MEID', 'description', 'cellReselectionPriority', 'eutranRslPara', 'eutranRslParaExt']
 excelPath_eutranTDD = r'C:\\Users\\luohao\\Desktop\\事件工具\\EUtranCellTDD.xlsx'
