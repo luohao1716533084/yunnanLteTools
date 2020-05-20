@@ -5,6 +5,7 @@ from pandas import DataFrame
 import re
 import os
 import copy
+from ZTE_reselection_tool import *
 
 excel_relation_TDD = {
     'excel1': 'EUtranCellTDD',
@@ -318,14 +319,20 @@ def main():
         result1 = pd.merge(df1, df2, on=['CI'])
         result2 = pd.merge(result1, df3, on=['refId'])
         result = insert_threshold(result2, df4)
-        result.to_excel('result.xlsx', index=False)
+        result.to_excel('result_handover.xlsx', index=False)
     else:
         print("%s 文件缺失, 请核查文件是否存在")
 
 if __name__ == '__main__':
-    print("Welcome to use threshold tool.The version2.1. Author by luohao")
-    print('欢迎使用中兴LTE切换事件工具')
-    print('***TDD和FDD制式均可使用该工具')
-    print("程序静默执行，请耐心等待...")
+    print("Welcome to use threshold tool.The version2.1. Author by LuoHao")
+    print('欢迎使用中兴LTE切换重选参数工具')
+    print('*TDD和FDD制式均可使用该工具')
+    print("*程序静默执行，请耐心等待")
+    print("*请保证如下文件与脚本在同一目录下:")
+    print("EUtranReselectionTDD", "EUtranCellTDD", "EUtranCellMeasurementTDD", "CellMeasGroupTDD", "UeEUtranMeasurementTDD")
+    reselection_main()
+    print("*" * 10)
+    print("重选参数result_reselection.xlsxw文件已生成")
+    print("开始生成切换参数文件，请稍等。。。")
     main()
-    print(input("result.xlsx文件已生成，输入任意键按回车退出："))
+    print(input("result_handover.xlsx文件已生成，输入任意键按回车退出："))

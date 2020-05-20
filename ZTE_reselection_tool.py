@@ -3,6 +3,7 @@
 import pandas as pd
 import re
 import copy
+import os
 
 """
 2020/3/12
@@ -11,8 +12,6 @@ push github
 """
 eutranTDD_cols = ['MEID', 'description', 'userLabel', 'earfcn']
 eutranTDD_Reselection_cols = ['MEID', 'description', 'cellReselectionPriority', 'snonintrasearch', 'sIntraSearch', 'threshSvrLow', 'eutranRslPara', 'eutranRslParaExt']
-excelPath_eutranTDD = r'EUtranCellTDD.xlsx'
-excelPath_reselection = r'EUtranReselectionTDD.xlsx'
 SHEET_NAME_EUtran = 'EUtranCellTDD'
 SHEET_NAME_Re = 'EUtranReselectionTDD'
 
@@ -101,7 +100,22 @@ def re_proc(cell_data1, cell_data2, flag):
 	else:
 		return freq_list[0], Prio_list[0], xhigh[0], xlow[0]
 
-def main():
+def reselection_main():
+	path = os.getcwd()
+	dirs = os.listdir(path)
+
+	"""
+	找到EUtranCellTDD, EUtranReselectionTDD文件路径，添加至file_file
+	"""
+	file_path = ['', '']
+	for i in dirs:
+		if "EUtranCellTDD" in i:
+			file_path[0] = i
+		if "EUtranReselectionTDD" in i:
+			file_path[1] = i
+
+	excelPath_eutranTDD, excelPath_reselection = file_path[0], file_path[1]
+
 	EUtranCellTDD = OpenExcel(excelPath_eutranTDD, SHEET_NAME_EUtran,eutranTDD_cols)
 	EUtranReselectionTDD = OpenExcel(excelPath_reselection,SHEET_NAME_Re,eutranTDD_Reselection_cols)
 	excel1 = EUtranCellTDD.pre_process()
@@ -129,9 +143,9 @@ def main():
 	df.columns = result_columns
 	df.to_excel('result_reselection.xlsx', index=False)
 
-if __name__ == '__main__':
-	print("Welcome to use ZTE_reselection_tool.The version1.0. Author by LuoHao")
-	print('欢迎使用中兴重选工具')
-	print("程序静默执行，请耐心等待...")
-	main()
-	print(input("result.xlsx文件已生成，输入任意键按回车退出："))
+# if __name__ == '__main__':
+# 	print("Welcome to use ZTE_reselection_tool.The version1.0. Author by LuoHao")
+# 	print('欢迎使用中兴重选工具')
+# 	print("程序静默执行，请耐心等待...")
+# 	main()
+# 	print(input("result.xlsx文件已生成，输入任意键按回车退出："))
