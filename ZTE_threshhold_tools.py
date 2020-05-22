@@ -192,6 +192,8 @@ def pretreatment_excel4(excel_path, excel_name):
 """根据站号(MEID)和测量配置号获取UeEUtranMeasurementTDD表里的门限值"""
 def get_threshold_value(meid, measCfgIdx, subUeEUtran):
     threshold_value = []
+
+
     meid_eventId = str(meid) + str('-') + str(measCfgIdx)
     #series为行记录，其类型为<class 'pandas.core.series.Series'>；可以通过['列名']访问值
     series = subUeEUtran.loc[meid_eventId]
@@ -230,6 +232,7 @@ def get_threshold_value1(meid, measCfgIdx, subUeEUtran):
         tmp_value2 = series[dict_list[1]]
         threshold_value[3] = tmp_value2
     #返回的threshold_value是一个列表,元素是门限值；该长度固定是4
+    #print(threshold_value)
     return threshold_value
 
 #intraFHOMeasCfg：同频A3
@@ -299,7 +302,7 @@ def insert_threshold(df1, df2):          #df1为3个原始表关联的表，df2�
                 final_result.loc[count] = new_result
                 count += 1
                 del insertRow_cp, tmplist, new_result
-
+    #print(final_result)
     return final_result
 
 def main():

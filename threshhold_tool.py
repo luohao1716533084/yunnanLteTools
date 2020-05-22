@@ -303,6 +303,7 @@ def insert_threshold(df1, df2):          #df1为3个原始表关联的表，df2�
 
 def main():
 	cheak_results = cheak_excel()
+	print(cheak_results)
 	if	cheak_results[0] == True:
 		excel_path_list = cheak_results[1]
 		lte = cheak_results[2]
